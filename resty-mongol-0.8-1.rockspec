@@ -1,10 +1,10 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "resty-mongol"
-version = "0.8-0"
+version = "0.8-1"
 -- LuaDist source
 source = {
-  tag = "0.8-0",
+  tag = "0.8-1",
   url = "git://github.com/LuaDist-testing/resty-mongol.git"
 }
 -- Original source
