@@ -45,10 +45,8 @@ local function full_collection_name ( self , collection )
   return  db .. "." .. collection .. "\0"
 end
 
-local id = 0
 local function docmd ( conn , opcode , message ,  reponseTo )
-  id = id + 1
-  local req_id = id
+  local req_id = math.random(1, 2147483647)
   local requestID = num_to_le_uint ( req_id )
   reponseTo = reponseTo or "\255\255\255\255"
   opcode = num_to_le_uint ( assert ( opcodes [ opcode ] ) )
@@ -136,6 +134,62 @@ function colmethods:insert(docs, continue_on_error, safe)
     return -1 end
   end
 
+  function colmethods:update_all(updates, ordered, wc)
+    local i = 0
+    local vupdates = {}
+    for _, v in pairs(updates) do
+      vupdates[i] = v
+      i = i+1
+    end
+    local oldpairs = pairs
+    pairs = function(t)
+      local mt = getmetatable(t)
+      if mt and mt.__pairs then
+        return mt.__pairs(t)
+      else
+        return oldpairs(t)
+      end
+    end
+    local r, err = self.db_obj:cmd(attachpairs_start({
+      update = self.col,
+      updates = vupdates,
+      ordered = ordered,
+      writeConcern = wc
+    }, "update"))
+    pairs = oldpairs
+    if not r then
+      return nil, err
+    end
+    return r
+  end
+
+  function colmethods:aggregate(pipeline)
+    local i = 0
+    local vpipeline = {}
+    for _, v in pairs(pipeline) do
+      vpipeline[i] = v
+      i = i+1
+    end
+    local oldpairs = pairs
+    pairs = function(t)
+      local mt = getmetatable(t)
+      if mt and mt.__pairs then
+        return mt.__pairs(t)
+      else
+        return oldpairs(t)
+      end
+    end
+    local r, err = self.db_obj:cmd(attachpairs_start({
+      aggregate = self.col,
+      pipeline = vpipeline,
+    }, "aggregate"))
+    pairs = oldpairs
+    if not r or not r.ok == 1 then
+      return nil, err
+    end
+    return r.result
+  end
+
   function colmethods:update(selector, update, upsert, multiupdate, safe)
     safe = safe or 0
     upsert = upsert or 0
@@ -145,7 +199,7 @@ function colmethods:insert(docs, continue_on_error, safe)
     selector = to_bson(selector)
     update = to_bson(update)
 
-    local m = "\0\0\0\0" .. full_collection_name(self, self.col) 
+    local m = "\0\0\0\0" .. full_collection_name(self, self.col)
     .. num_to_le_uint ( flags ) .. selector .. update
     local id, send = docmd(self.conn, "UPDATE", m)
     if send == 0 then
@@ -252,9 +306,10 @@ function colmethods:insert(docs, continue_on_error, safe)
         return oldpairs(t)
       end
     end
+
     local r, err = self.db_obj:cmd(attachpairs_start({
       count = self.col,
-      query = next(query) and query or nil
+      query = query or nil
     }, "count"))
     pairs = oldpairs
     if not r then
