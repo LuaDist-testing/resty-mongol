@@ -1,16 +1,16 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "resty-mongol"
-version = "0.5-0"
+version = "0.6-0"
 -- LuaDist source
 source = {
-  tag = "0.5-0",
+  tag = "0.6-0",
   url = "git://github.com/LuaDist-testing/resty-mongol.git"
 }
 -- Original source
 -- source = {
---   url = "https://github.com/Olivine-Labs/resty-mongol/archive/v0.5.tar.gz",
---   dir = "resty-mongol-0.5"
+--   url = "https://github.com/Olivine-Labs/resty-mongol/archive/v0.6.tar.gz",
+--   dir = "resty-mongol-0.6"
 -- }
 description = {
   summary = "Mongo driver for openresty.",
